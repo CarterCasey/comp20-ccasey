@@ -9,9 +9,9 @@ function showData()
 
 		html_data = "\n";
 		for (i in data) { // Doesn't do what I'd expect
-			next_p = "\t\t<p id=\"" + data[i]["id"] + "\"> "
+			next_p = "\t\t<p id=\"" + data[i]["id"] + "\">"
 				   + data[i]["username"] + ": "
-				   + data[i]["content"] + " </p>\n";
+				   + data[i]["content"] + "</p>\n";
 			html_data += next_p;
 		}
 		html_data += "\t";
