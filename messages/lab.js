@@ -7,13 +7,14 @@ function showData()
 
 		data = JSON.parse(str_data);
 
-		html_data = ""
+		html_data = "\n";
 		for (i in data) { // Doesn't do what I'd expect
-			next_p = "<p id=\"" + data[i]["id"] + "\"> "
+			next_p = "\t\t<p id=\"" + data[i]["id"] + "\"> "
 				   + data[i]["username"] + ": "
 				   + data[i]["content"] + " </p>\n";
 			html_data += next_p;
 		}
+		html_data += "\t";
 
 		document.getElementById("messages").innerHTML = html_data;
 	}

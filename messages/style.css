@@ -1,3 +1,15 @@
+h1 {
+	margin-left: 10px;
+}
+
+div#messages {
+	display: inline-block;
+}
+
 div#messages p {
+	margin: 12px;
+	padding: 6px;
+
+	border-radius: 6px;
 	background-color: lightblue;
 }
