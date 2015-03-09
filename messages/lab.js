@@ -1,7 +1,5 @@
 function showData()
 {
-	console.log("Ready State: " + request.readyState);
-
 	if (request.readyState == 4 && request.status == 200) {
 		str_data = request.responseText;
 
