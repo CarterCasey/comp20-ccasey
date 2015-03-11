@@ -1,9 +1,18 @@
+// The core of Assignment 3 for Comp 20.
+//
+// Script that renders a map using the google maps API,
+// finds the user's current location, as well as the stored
+// location of all participating users, and plots all of them
+// on the map.
+//
+// Author: Carter Casey
+
 var map; // Make it global, like document
 
 // Called after page loads - renders map, finds user
 function init() {
-	var tufts_pos = new google.maps.LatLng(0,0);//42.4069,
-										  //-71.1198);
+	var tufts_pos = new google.maps.LatLng(0,0); //42.4069,
+										        //-71.1198);
 	var options = {zoom: 16, center: tufts_pos};
 	var map_canvas = document.getElementById("map-canvas");
 	map = new google.maps.Map(map_canvas, options);
