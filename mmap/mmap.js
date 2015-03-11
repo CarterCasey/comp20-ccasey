@@ -19,23 +19,37 @@ function init() {
 	locate();
 }
 
-// Function to be called when
-// getCurrentPosition succeeds
-function findMe(pos) {
-	var my_pos = new google.maps.LatLng(pos.coords.latitude,
-										pos.coords.longitude);
-	map.panTo(my_pos)
-
-	var my_icon = { size: new google.maps.Size(300, 300),
+function showMe(my_pos) {
+	var my_icon = { size: new google.maps.Size(75, 75),
         	  scaledSize: new google.maps.Size(75, 75),
+        	  	  origin: new google.maps.Point(0, 0),
+        	  	  anchor: new google.maps.Point(50, 75),
         			 url: "kirby.png"};
 
 	var my_marker = new google.maps.Marker({
 		animation: google.maps.Animation.DROP,
 		position: my_pos, map: map,
-		title: "This is you. You are here.",
+		title: "This is you. You are RichardDrake. RichardDrake is here.",
     	icon: my_icon
     });
+
+	var my_info = new google.maps.InfoWindow;
+
+	google.maps.event.addListener(my_marker, 'click',
+		function() {
+			my_info.setContent(my_marker.title);
+			my_info.open(map, my_marker);
+		}
+	);
+}
+
+// Function to be called when
+// getCurrentPosition succeeds
+function findMe(pos) {
+	var my_pos = new google.maps.LatLng(pos.coords.latitude,
+										pos.coords.longitude);
+	map.panTo(my_pos);
+	showMe(my_pos);
 
 	// findOthers(my_pos); // make datastore request
 }
@@ -50,8 +64,8 @@ function lostMe(err) {
 function locate() {
 	if (navigator.geolocation) {
 		navigator.geolocation.getCurrentPosition(findMe, lostMe,
-			{enableHighAccuracy: false, timeout: 10000, maximumAge: 0});
-			// If it takes more than 10 seconds, it's taking too long
+			{enableHighAccuracy: false, timeout: 15000, maximumAge: 0});
+			// If it takes more than 15 seconds, it's taking too long
 	}
 }
 
