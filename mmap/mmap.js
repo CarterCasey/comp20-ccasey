@@ -8,18 +8,22 @@
 // Author: Carter Casey
 
 var map; // Make the map global, like document
+var info_window; // Must have exactly one info window.
 
 var request; // I don't like doing this, but
 			 // for the callback to work, it
-			 // *must* be global in some way.
+			 // has to have a global scope.
 
 // Called after page loads - renders map, finds user
 function init() {
-	var tufts_pos = new google.maps.LatLng(0,0); //42.4069,
-										        //-71.1198);
+	var tufts_pos = new google.maps.LatLng(42.4069,
+										  -71.1198);
 	var options = {zoom: 16, center: tufts_pos};
 	var map_canvas = document.getElementById("map-canvas");
+	
 	map = new google.maps.Map(map_canvas, options);
+	info_window = new google.maps.InfoWindow;
+
 	locate();
 }
 
@@ -52,7 +56,7 @@ function findMe(pos) {
 // Display marker and set up
 // info window for user
 function showMe(my_pos) {
-	var my_icon = { size: new google.maps.Size(75, 75),
+	var my_icon = { size: new google.maps.Size(300, 300),
         	  scaledSize: new google.maps.Size(75, 75),
         	  	  origin: new google.maps.Point(0, 0),
         	  	  anchor: new google.maps.Point(50, 75),
@@ -65,12 +69,11 @@ function showMe(my_pos) {
     	icon: my_icon
     });
 
-	var my_info = new google.maps.InfoWindow;
-
 	google.maps.event.addListener(my_marker, 'click',
 		function() {
-			my_info.setContent(my_marker.title);
-			my_info.open(map, my_marker);
+			info_window.close();
+			info_window.setContent(my_marker.title);
+			info_window.open(map, my_marker);
 		}
 	);
 }
@@ -108,8 +111,44 @@ function parseResponse() {
 // Make markers and info windows
 // for users found in datastore
 function showOthers(other_locs) {
-	for (i in other_locs) {
-		console.log(other_locs[i]);
+	// Hacky, but gives useful alert if
+	// request is broken.
+	if (Object.keys(other_locs)[0] == "error") {
+		alert("Error:" + other_locs["error"]);
+		return;
 	}
+
+	for (i in other_locs) {
+		if (other_locs[i]["login"] != "RichardDrake") {
+			showThem(other_locs[i]);
+		}
+	}
+}
+
+// Display other member with location
+// and Haversine distance from user.
+function showThem(data) {
+	var their_icon = { size: new google.maps.Size(200, 265),
+        		 scaledSize: new google.maps.Size(57, 75),
+        	  		 origin: new google.maps.Point(0, 0),
+        	  		 anchor: new google.maps.Point(51, 75),
+        				url: "waddle_dee.png"};
+
+    var their_pos = new google.maps.LatLng(data["lat"], data["lng"]);
+
+	var their_marker = new google.maps.Marker({
+		animation: google.maps.Animation.DROP,
+		position: their_pos, map: map,
+		title: "This is " + data["login"] + ". " + data["login"] + " is here.",
+    	icon: their_icon
+    });
+
+	google.maps.event.addListener(their_marker, 'click',
+		function() {
+			info_window.close();
+			info_window.setContent(their_marker.title);
+			info_window.open(map, their_marker);
+		}
+	);
 }
 
