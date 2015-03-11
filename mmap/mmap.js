@@ -14,8 +14,14 @@ var request; // I don't like doing this, but
 			 // for the callback to work, it
 			 // has to have a global scope.
 
+var my_pos;  // Again, hate doing this, but
+			 // have to communicate with the
+			 // other user markers to get
+			 // distance
+
 // Called after page loads - renders map, finds user
 function init() {
+	// Initialize to Tufts' position.
 	var tufts_pos = new google.maps.LatLng(42.4069,
 										  -71.1198);
 	var options = {zoom: 16, center: tufts_pos};
@@ -45,12 +51,12 @@ function lostMe(err) {
 // Function to be called when
 // getCurrentPosition succeeds
 function findMe(pos) {
-	var my_pos = new google.maps.LatLng(pos.coords.latitude,
-										pos.coords.longitude);
+	my_pos = new google.maps.LatLng(pos.coords.latitude,
+									pos.coords.longitude);
 	map.panTo(my_pos);
 	showMe(my_pos);
 
-	findOthers(my_pos); // make datastore request
+	// findOthers(my_pos); // make datastore request
 }
 
 // Display marker and set up
@@ -120,14 +126,14 @@ function showOthers(other_locs) {
 
 	for (i in other_locs) {
 		if (other_locs[i]["login"] != "RichardDrake") {
-			showThem(other_locs[i]);
+			showUser(other_locs[i]);
 		}
 	}
 }
 
 // Display other member with location
 // and Haversine distance from user.
-function showThem(data) {
+function showUser(data) {
 	var their_icon = { size: new google.maps.Size(57, 75),
         		 scaledSize: new google.maps.Size(57, 75),
         	  		 origin: new google.maps.Point(0, 0),
@@ -143,12 +149,48 @@ function showThem(data) {
     	icon: their_icon
     });
 
-	google.maps.event.addListener(their_marker, 'click',
+	google.maps.event.addListener(their_marker, "click",
 		function() {
 			info_window.close();
-			info_window.setContent(their_marker.title);
+			var their_pos = their_marker.getPosition();
+			var distance = haversine(their_pos, my_pos);
+
+			var name = data["login"];
+			var content = document.createElement("div");
+			var header  = document.createElement("h1");
+			header.innerHTML = name;
+			content.appendChild(header);
+			var description = document.createElement("p");
+			description.innerHTML = distance + " away from RichardDrake";
+			content.appendChild(description);
+
+			info_window.setContent(content);
 			info_window.open(map, their_marker);
 		}
 	);
+}
+
+function haversine(their_pos, my_pos) {
+	var my_lat = my_pos.getLat();
+	var my_lng = my_pos.getLng();
+	var their_lat = their_pos.getLat();
+	var their_lng = their_pos.getLng();
+
+	var R = 3958.755866; // miles
+	var their_phi = their_lat.toRad();
+	var delta_phi = my_lat.toRad();
+	var delta_phi = (their_lat - my_lat).toRad();
+	var delta_lambda = (their_lng - my_lng).toRad();
+
+	var a = Math.sin(delta_phi / 2) * Math.sin(delta_phi / 2) +
+	        Math.cos(their_phi) * Math.cos(delta_phi) *
+	        Math.sin(delta_lambda / 2) * Math.sin(delta_lambda / 2);
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+	return R * c;
+}
+
+if (Number.prototype.toRad === undefined) {
+    Number.prototype.toRad = function() { return this * Math.PI / 180; };
 }
 
