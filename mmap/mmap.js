@@ -25,7 +25,18 @@ function findMe(pos) {
 	var my_pos = new google.maps.LatLng(pos.coords.latitude,
 										pos.coords.longitude);
 	map.panTo(my_pos)
-	// TODO: add marker for myself
+
+	var my_icon = { size: new google.maps.Size(300, 300),
+        	  scaledSize: new google.maps.Size(75, 75),
+        			 url: "kirby.png"};
+
+	var my_marker = new google.maps.Marker({
+		animation: google.maps.Animation.DROP,
+		position: my_pos, map: map,
+		title: "This is you. You are here.",
+    	icon: my_icon
+    });
+
 	// findOthers(my_pos); // make datastore request
 }
 
