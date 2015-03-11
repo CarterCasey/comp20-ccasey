@@ -56,7 +56,7 @@ function findMe(pos) {
 // Display marker and set up
 // info window for user
 function showMe(my_pos) {
-	var my_icon = { size: new google.maps.Size(300, 300),
+	var my_icon = { size: new google.maps.Size(75, 75),
         	  scaledSize: new google.maps.Size(75, 75),
         	  	  origin: new google.maps.Point(0, 0),
         	  	  anchor: new google.maps.Point(50, 75),
@@ -128,7 +128,7 @@ function showOthers(other_locs) {
 // Display other member with location
 // and Haversine distance from user.
 function showThem(data) {
-	var their_icon = { size: new google.maps.Size(200, 265),
+	var their_icon = { size: new google.maps.Size(57, 75),
         		 scaledSize: new google.maps.Size(57, 75),
         	  		 origin: new google.maps.Point(0, 0),
         	  		 anchor: new google.maps.Point(51, 75),
