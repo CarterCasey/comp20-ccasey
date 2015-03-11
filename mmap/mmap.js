@@ -1,4 +1,4 @@
-// The core of Assignment 3 for Comp 20.
+// The core of Assignment 2 for Comp 20.
 //
 // Script that renders a map using the google maps API,
 // finds the user's current location, as well as the stored
@@ -7,7 +7,11 @@
 //
 // Author: Carter Casey
 
-var map; // Make it global, like document
+var map; // Make the map global, like document
+
+var request; // I don't like doing this, but
+			 // for the callback to work, it
+			 // *must* be global in some way.
 
 // Called after page loads - renders map, finds user
 function init() {
@@ -19,6 +23,34 @@ function init() {
 	locate();
 }
 
+// Find user's location
+function locate() {
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(findMe, lostMe,
+			{enableHighAccuracy: false, timeout: 15000, maximumAge: 0});
+			// If it takes more than 15 seconds, it's taking too long
+	}
+}
+
+// Function to be called when
+// getCurrentPosition fails
+function lostMe(err) {
+	alert("Error: " + err.message);
+}
+
+// Function to be called when
+// getCurrentPosition succeeds
+function findMe(pos) {
+	var my_pos = new google.maps.LatLng(pos.coords.latitude,
+										pos.coords.longitude);
+	map.panTo(my_pos);
+	showMe(my_pos);
+
+	findOthers(my_pos); // make datastore request
+}
+
+// Display marker and set up
+// info window for user
 function showMe(my_pos) {
 	var my_icon = { size: new google.maps.Size(75, 75),
         	  scaledSize: new google.maps.Size(75, 75),
@@ -43,29 +75,41 @@ function showMe(my_pos) {
 	);
 }
 
-// Function to be called when
-// getCurrentPosition succeeds
-function findMe(pos) {
-	var my_pos = new google.maps.LatLng(pos.coords.latitude,
-										pos.coords.longitude);
-	map.panTo(my_pos);
-	showMe(my_pos);
+// Make Ajax request for user
+// positions (and names) in datastore
+function findOthers(user_pos) {
+	var login = "RichardDrake";
 
-	// findOthers(my_pos); // make datastore request
+	request = new XMLHttpRequest;
+	request.open("POST", "https://secret-about-box.herokuapp.com/sendLocation");
+	request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	request.onreadystatechange = parseResponse;
+
+	var params = "login=" + login +
+				 "&lat="  + user_pos.lat() +
+				 "&lng="  + user_pos.lng() ;
+
+	request.send(params);
 }
 
-// Function to be called when
-// getCurrentPosition fails
-function lostMe(err) {
-	alert("Error: " + err.message);
+// Wait for ready state of 4
+// then attempt to parse JSON
+function parseResponse() {
+	if (request.readyState == 4) {
+		if (request.status == 200) {
+			showOthers(JSON.parse(request.responseText));
+		} else {
+			alert("Error(" + response.status +
+						 "): Other user locations are unavailable.");
+		}
+	}
 }
 
-// Find my location
-function locate() {
-	if (navigator.geolocation) {
-		navigator.geolocation.getCurrentPosition(findMe, lostMe,
-			{enableHighAccuracy: false, timeout: 15000, maximumAge: 0});
-			// If it takes more than 15 seconds, it's taking too long
+// Make markers and info windows
+// for users found in datastore
+function showOthers(other_locs) {
+	for (i in other_locs) {
+		console.log(other_locs[i]);
 	}
 }
 
