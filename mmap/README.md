@@ -12,3 +12,6 @@ I have not collaborated with anyone on this assignment.
 
 I spent probably around six to eight hours on this assignment.  
 
+## Additional Notes
+
+I added a small piece to the map - when a datastore marker is clicked, a line appears showing the (geodesic) path between that marker and the user's marker. When the infowindow closes (either by clicking outside of it, or by clicking the close button), the line is removed.  

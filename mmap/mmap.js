@@ -9,6 +9,7 @@
 
 var map; // Make the map global, like document
 var info_window; // Must have exactly one info window.
+var line_connector; // An addition I thought would be interesting
 
 var request; // I don't like doing this, but
 			 // for the callback to work, it
@@ -29,6 +30,18 @@ function init() {
 	
 	map = new google.maps.Map(map_canvas, options);
 	info_window = new google.maps.InfoWindow;
+	line_connector = new google.maps.Polyline({
+		geodesic: true, map: map, strokeColor: "#00B8FF"
+	});
+
+    google.maps.event.addListener(info_window, "closeclick", function () {
+    	line_connector.setMap(null)
+    });
+
+	google.maps.event.addListener(map, "click", function () {
+		info_window.close();
+		line_connector.setMap(null);
+	});
 
 	locate();
 }
@@ -65,7 +78,7 @@ function showMe(my_pos) {
 	var my_icon = { size: new google.maps.Size(75, 75),
         	  scaledSize: new google.maps.Size(75, 75),
         	  	  origin: new google.maps.Point(0, 0),
-        	  	  anchor: new google.maps.Point(50, 75),
+        	  	  anchor: new google.maps.Point(50, 5),
         			 url: "kirby-icon.png"};
 
 	var my_marker = new google.maps.Marker({
@@ -124,7 +137,7 @@ function showOthers(other_locs) {
 	// Hacky, but gives useful alert if
 	// request is broken.
 	if (Object.keys(other_locs)[0] == "error") {
-		alert("Error:" + other_locs["error"]);
+		alert("Error finding other users:" + other_locs["error"]);
 		return;
 	}
 
@@ -141,7 +154,7 @@ function showUser(data) {
 	var their_icon = { size: new google.maps.Size(57, 75),
         		 scaledSize: new google.maps.Size(57, 75),
         	  		 origin: new google.maps.Point(0, 0),
-        	  		 anchor: new google.maps.Point(51, 75),
+        	  		 anchor: new google.maps.Point(0, 0),
         				url: "waddle-dee-icon.png"};
 
     var their_pos = new google.maps.LatLng(data["lat"], data["lng"]);
@@ -171,6 +184,9 @@ function showUser(data) {
 
 			info_window.setContent(content);
 			info_window.open(map, their_marker);
+
+			line_connector.setPath([my_pos, their_pos]);
+			line_connector.setMap(map);
 		}
 	);
 }
