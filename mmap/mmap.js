@@ -24,7 +24,7 @@ function init() {
 	// Initialize to Tufts' position.
 	var tufts_pos = new google.maps.LatLng(42.4069,
 										  -71.1198);
-	var options = {zoom: 16, center: tufts_pos};
+	var options = {zoom: 17, center: tufts_pos};
 	var map_canvas = document.getElementById("map-canvas");
 	
 	map = new google.maps.Map(map_canvas, options);
