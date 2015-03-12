@@ -34,10 +34,12 @@ function init() {
 		geodesic: true, map: map, strokeColor: "#00B8FF"
 	});
 
+	// Remove line if user clicks on the info_window's "x" button
     google.maps.event.addListener(info_window, "closeclick", function () {
-    	line_connector.setMap(null)
+    	line_connector.setMap(null);
     });
 
+    // Close info_window and remove line if user clicks outside of it
 	google.maps.event.addListener(map, "click", function () {
 		info_window.close();
 		line_connector.setMap(null);
@@ -69,7 +71,7 @@ function findMe(pos) {
 	map.panTo(my_pos);
 	showMe(my_pos);
 
-	findOthers(my_pos); // make datastore request
+	findOthers(my_pos); // make datastore request, then show on map
 }
 
 // Display marker and set up
@@ -78,7 +80,7 @@ function showMe(my_pos) {
 	var my_icon = { size: new google.maps.Size(75, 75),
         	  scaledSize: new google.maps.Size(75, 75),
         	  	  origin: new google.maps.Point(0, 0),
-        	  	  anchor: new google.maps.Point(50, 5),
+        	  	  anchor: new google.maps.Point(52, 6),
         			 url: "kirby-icon.png"};
 
 	var my_marker = new google.maps.Marker({
@@ -91,8 +93,9 @@ function showMe(my_pos) {
 	google.maps.event.addListener(my_marker, 'click',
 		function() {
 			info_window.close();
+	    	line_connector.setMap(null);
 			var content = document.createElement("div");
-			content.innerHTML = "<h3>RichardDrake</h3>\n<p>" +
+			content.innerHTML = "<h3>You (RichardDrake)</h3>\n<p>" +
 								my_marker.title + "</p>"
 
 			info_window.setContent(content);
@@ -179,7 +182,7 @@ function showUser(data) {
 			content.appendChild(header);
 			var description = document.createElement("p");
 			description.innerHTML = distance.toFixed(4) +
-									" miles away from RichardDrake";
+									" miles away from you";
 			content.appendChild(description);
 
 			info_window.setContent(content);
