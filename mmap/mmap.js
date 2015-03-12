@@ -56,7 +56,7 @@ function findMe(pos) {
 	map.panTo(my_pos);
 	showMe(my_pos);
 
-	// findOthers(my_pos); // make datastore request
+	findOthers(my_pos); // make datastore request
 }
 
 // Display marker and set up
@@ -66,7 +66,7 @@ function showMe(my_pos) {
         	  scaledSize: new google.maps.Size(75, 75),
         	  	  origin: new google.maps.Point(0, 0),
         	  	  anchor: new google.maps.Point(50, 75),
-        			 url: "kirby.png"};
+        			 url: "kirby-icon.png"};
 
 	var my_marker = new google.maps.Marker({
 		animation: google.maps.Animation.DROP,
@@ -78,7 +78,11 @@ function showMe(my_pos) {
 	google.maps.event.addListener(my_marker, 'click',
 		function() {
 			info_window.close();
-			info_window.setContent(my_marker.title);
+			var content = document.createElement("div");
+			content.innerHTML = "<h3>RichardDrake</h3>\n<p>" +
+								my_marker.title + "</p>"
+
+			info_window.setContent(content);
 			info_window.open(map, my_marker);
 		}
 	);
@@ -138,7 +142,7 @@ function showUser(data) {
         		 scaledSize: new google.maps.Size(57, 75),
         	  		 origin: new google.maps.Point(0, 0),
         	  		 anchor: new google.maps.Point(51, 75),
-        				url: "waddle_dee.png"};
+        				url: "waddle-dee-icon.png"};
 
     var their_pos = new google.maps.LatLng(data["lat"], data["lng"]);
 
@@ -157,11 +161,12 @@ function showUser(data) {
 
 			var name = data["login"];
 			var content = document.createElement("div");
-			var header  = document.createElement("h1");
+			var header  = document.createElement("h3");
 			header.innerHTML = name;
 			content.appendChild(header);
 			var description = document.createElement("p");
-			description.innerHTML = distance + " away from RichardDrake";
+			description.innerHTML = distance.toFixed(4) +
+									" miles away from RichardDrake";
 			content.appendChild(description);
 
 			info_window.setContent(content);
@@ -170,11 +175,13 @@ function showUser(data) {
 	);
 }
 
+// Calculate distance from other user
+// to current user.
 function haversine(their_pos, my_pos) {
-	var my_lat = my_pos.getLat();
-	var my_lng = my_pos.getLng();
-	var their_lat = their_pos.getLat();
-	var their_lng = their_pos.getLng();
+	var my_lat = my_pos.lat();
+	var my_lng = my_pos.lng();
+	var their_lat = their_pos.lat();
+	var their_lng = their_pos.lng();
 
 	var R = 3958.755866; // miles
 	var their_phi = their_lat.toRad();
@@ -189,7 +196,7 @@ function haversine(their_pos, my_pos) {
 
 	return R * c;
 }
-
+// Convert degrees to radians
 if (Number.prototype.toRad === undefined) {
     Number.prototype.toRad = function() { return this * Math.PI / 180; };
 }
