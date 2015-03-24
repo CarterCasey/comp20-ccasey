@@ -6,7 +6,52 @@
 	<title>Captain's Log</title>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 	<script>
-	  // Most of your work will be done here...
+	function clean(message) {
+		return message.replace(/(<|>|'|"|&)/g,
+			function (match, p1) {
+				switch (p1) {
+					case '<':
+						return "&lt;";
+						break;
+					case '>':
+						return "&gt;";
+						break;
+					case '\'':
+						return "&#39;";
+						break;
+					case '"':
+						return "&quot;";
+						break;
+					case '&':
+						return "&amp;";
+						break;
+					default: // This can never happen
+						return p1;
+				}
+			}
+		);
+	};
+
+	function log(message) {
+		var date = Date();
+		var clean_message = clean(message);
+		localStorage[date] = clean_message;
+		return "<p>" + date + ": " + clean_message + "</p>\n";
+	};
+
+	function reload() {
+		for (date in localStorage) {
+			$("#log").prepend("<p>" + date + ": " + localStorage[date] + "</p>\n");
+		}
+	}
+
+	$("document").ready(function() {
+		reload();
+		$("#msg").change(function() {
+			$("#log").prepend(log($("#msg").val()));
+			$("#msg").val("");
+		});
+	});
 	</script>
 </head>
 
