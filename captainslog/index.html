@@ -34,15 +34,25 @@
 
 	function log(message) {
 		var date = Date();
+		var epoch_time = Date.now();
 		var clean_message = clean(message);
-		localStorage[date] = clean_message;
-		return "<p>" + date + ": " + clean_message + "</p>\n";
+		var entry = "<p>" + date + ": " + clean_message + "</p>\n"
+		localStorage[epoch_time] = entry;
+		return entry;
 	};
 
 	function reload() {
-		for (date in localStorage) {
-			$("#log").prepend("<p>" + date + ": " + localStorage[date] + "</p>\n");
+		var times = [];
+		// For some reason, localStorage doesn't offer
+		// a keys function. Apparently it's not pure hash?
+		for (time in localStorage) {
+			times.push(time);
 		}
+		times.sort();
+
+		times.forEach(function (time) {
+			$("#log").prepend(localStorage[time]);
+		})
 	}
 
 	$("document").ready(function() {
