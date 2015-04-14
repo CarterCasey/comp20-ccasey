@@ -110,7 +110,7 @@ function findOthers(user_pos) {
 	var login = "RichardDrake";
 
 	request = new XMLHttpRequest;
-	request.open("POST", "https://secret-about-box.herokuapp.com/sendLocation");
+	request.open("POST", "https://mmap-db.herokuapp.com/sendLocation");
 	request.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	request.onreadystatechange = parseResponse;
 
