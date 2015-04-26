@@ -2,33 +2,88 @@
 <html>
 <head>
 	<title>Security and Privacy Assessment</title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="report.css"/>
 </head>
 <body>
 	<h1>Security and Privacy Assessment of Client-Side and Server-Side</h1>
+	<h3>Author: Carter Casey</h3>
 	<h2>Introduction</h2>
-		<p><a href="http://vast-headland-6853.herokuapp.com/">The page in question.</a></p>
+		<p>
+			I was asked to evaluate the Marauder's Map Web application created by Valerie Ng. The application allows users to log their location via a pre-determined username, look up their most recently logged location, view their location in a map, and view/look up the location of other users. The application has two components: a <a href="http://tuftsdev.github.io/comp20-vng/mmap/">front-end</a> that logs user location and displays all user locations in a map automatically, and a <a href="http://vast-headland-6853.herokuapp.com/">back-end server</a> that provides the APIs and storage for the front-end to work. 
+		</p>
+		<p>
+			My task is to evaluate the security and privacy of Valerie's application. I will report on security flaws that may cause danger to the users, as well as design flaws that could reveal personal information about users (namely, their location). 
+		</p>
 	<h2>Methodology</h2>
+		<p>
+			My primary tool for this assignment was <code>curl</code>. It's a fairly versatile tool, and with APIs as simple as the ones provided by the server, I didn't need much more. For instance, the command <code>curl http://vast-headland-6853.herokuapp.com/</code> sends a GET request and then displays the returned resource. As in that example, <code>curl</code> typically defaults to GET requests, which was fine for the / and /location.json APIs, but for /sendLocation (which is where the biggest vulnerabilities originate) I needed POST requests. This is done simply with the <code>--data</code> flag. To insert something to the sendLocation API, I used <code>curl --data 'login=name&amp;lat=0.00&amp;lng=0.00' http://vast-headland-6853.herokuapp.com/sendLocation</code> (obviously with variations on the login and lat/lng).
+		</p>
+		<p>
+			To observe the effects of my work, I simply used a browser (generally either firefox or chrome) to display the contents of the front-end and the back-end index page. It was in this way I was able to capture the screenshots I use in this report.
+		</p>
 	<h2>Abstract of Findings</h2>
+		<p>
+			The site had a number of security flaws, but the most glaring was the fact that user input to the location database was not sanitized. Any user could send any string they wanted as the login - this includes executable javascript and very large amounts of data. This means that any client that uses this app (and there could be several) could send in javascript to be executed on every other client's page. Javascript is very versatile - for example, they could be forced to another web page than the one they asked for, and (if the attacker was clever enough) be led to believe they were securely using the original page while browsing a malicious one. There are countless other possible ways to leverage malicious javascript. Other than javascript, erroneous input, or even dangerously large amounts of data, could be sent through this API - the former is simply inconvenient, the latter could cause the server to be overloaded and shut down.
+		</p>
+		<p>
+			The site had one other notable problem: user locations can be determined with relative ease, despite random usernames meant to hide their identities. For this class, each person published their own front-end under a customized github account that identifies them by first initial and last name. By looking up this web page, an attacker could easily determine what username has been assigned to a given user. Once they know this username, they could monitor the site and find out when and where the user has last logged their location - a fairly large privacy leak.
+		</p>
 	<h2>Issues Found</h2>
 		<h3>Issue One: Cross-Site Scripting</h3>
 		<ol>
+			<li>Location: Payload for scripting attack is sent through the sendLocation API, using the login field of POST data. It comes into effect when displayed on the server's index page.</li>
+			<li>Severity: High. Listed as the third of OWASP's Top Ten, XSS is a very serious security hole in any website.</li>
+			<li>Description: Using <code>curl</code>, I was able to submit a script attack as the login for the /sendLocation API. The command <code>curl --data 'login=&lt;script&gt;alert("Script Attack");&lt;/script&gt;&amp;lat=0.00&amp;lng=0.00' http://vast-headland-6853.herokuapp.com/sendLocation</code>caused that data to be stored in the server's database, and whenever a user requested the index page (listing all user's locations) would cause an alert box to appear in the user's browser. The javascript inside those tags could be changed to any other valid code.
+			<br/>
+			This can be seen in the server-side code, where data is added to the database: 
+			<br/>
+			<img src="xss-source.png" title="Note the lack of escaping"/>
+			</li>
+			<li>Proof: The following screenshot demonstrates an example of the scripting attack.
+			<br/>
+			<img src="xss.png" title="Cross-Site Scripting"/></li>
+			<li>Resolution: Rather than inputting a raw string, it's best to escape any user input to the database. So, changing the line <code>"login": newlogin,</code> to <code>"login": validator.escage(newlogin),</code>, where <code>validator</code> is the node validator package. This will turn any special characters in the input into the HTML escaped version of those characters (&lt; becomes <code>&amp;lt;</code>).</li>
 		</ol>
 
 		<h3>Issue Two: Database Overloading</h3>
 		<ol>
-		</ol>
-
-		<h3>Issue Three: User Privacy</h3>
-		<ol>
+			<li>Location: Again, this attack is conducted through the POST login parameter. It takes effect in the server itself.</li>
+			<li>Severity: Moderate. While breaking the database would hurt the site itself, it would cause no undue danger or harm to its users.</li>
+			<li>Description: There are no bounds on the number of users that can login to the site, nor the length that a username may be. This means that arbitrarily long strings may be submitted to the server, and will always be input to the database. If the database had an arbitrary amount of memory, that would be fine, but it doesn't - we can only store so much data on a given server, or in a particular database. If we start exceeding that amount, the database will cease to function correctly, and the server may shut down the app.</li>
+			<li>Proof: I didn't force the database to use enough data to cause it to crash (I'm trying to find the vulnerabilities, not exploit them myself), I only sent in a few large strings to the server. I generated the strings using files in my directory, encoded in Base 64. The following is a screenshot of a few of those strings being printed out in the list of users' locations:
+			<br/>
+			<img src="overloading.png" title="Strings used for database overloading"/></li>
+			<li>Resolution: Limit the valid length of a username. This can be done either by rejecting strings with a length that's too long: <code>if (login.length > 32) { /* code to send error message */ }</code>, or by truncating the username: <code>login.slice(32)</code> will give the first 32 characters of the login parameter.</li>
 		</ol>
 
 		<h3>Issue Four: Input Sanity Checks</h3>
 		<ol>
+			<li>Location: The /sendLocation API, but this time in the lat/lng POST parameters.</li>
+			<li>Severity: Low. The input can be wrong, but there will be no significant harm to the user.</li>
+			<li>Description: There are no bounds or sanity checks on the input for the user's location. Their latitude and longitude can be anything (though strings that can't be parsed as floats will produce NaN as output). This means that a user can claim to be in Brazil, or Tokyo, or Greece, or really anywhere they'd like. They can even give an illegal latitude or longitude, one that doesn't exist in the range of valid degrees. Consequently, the validity of the app becomes questionable. Is user LayneVasquez really in Dewick eating lunch? Or have they given the app a bogus input, and are really in Halligan like they have been all weekend? It's technically impossible to tell.</li>
+			<li>Proof: The following shows some (bogus) users in a place they can't possibly be:
+			<br/>
+			<img src="sanity-checking.png" title="Users in Africa"/></li>
+			<li>Resolution: The issue of bounds checking is easy to resolve. We can force put in an if statement that only accepts input if it's within the legal range of global coordinates: <code>if (lat &lt; valid_lat_max || lat &gt; valid_lat_min) { /* more code to send an error to the user */ }</code>. The issue of verifying whether a user is actually where they say they are is another matter altogether. Given the fact that this app accepts user input in plain text, and from any source, there's currently no way to make this happen. Even with a user authentication service installed, I'm not sure how to get location verification to work without serious effort. Any method that does exist certainly won't make the app more secure, just more accurate</li>
 		</ol>
 
-		<h3>Issue</h3>
+		<h3>Issue Four: User Privacy</h3>
 		<ol>
+			<li>Location: The user's login is stored in plain-text in the client web page.</li>
+			<li>Severity: Moderate to high. The flaw could reveal the user's exact location to anyone with the appropriate URL - depending on who's trying to find the user, and what their intentions are upon finding them, this could be an issue of privacy or an issue of personal safety.</li>
+			<li>Description: When viewing the client page's javascript, it's clear what the username is - the string being passed into the login parameter of the /sendLocation API: <code>httppost.send("login=LayneVasquez&amp;lat="+myLat+"&amp;lng="+myLng);</code> Subsequently, anyone with access to both this source code, and the locations of all users in the system, would be able to locate the user.</li>
+			<li>Proof: Referring to the line above, we can look at the printout in the server's index.html to find where the user (LayneVasquez) is:
+			<br/>
+			<img src="user-location.png" title="The user's location at last login"/></li>
+			<li>Resolution: The resolution for this problem is significantly harder than the others, and doesn't lend itself to code snippet answers. The real solution is to set up a user authentication system, distribute usernames discreetly, and deal with their storage and verification on the serverside, where an attacker can't see them. There are many ways to do this, and none of them are simple.</li>
 		</ol>
 	<h2>Conclusion</h2>
+	<p>
+		The app, as it stands, has several glaring security flaws. There are some simple fixes (sanitize user input!) and some problems that defy immediate solution - user authentication takes some time to do right, unless you use an outside service. The issue of location verification is probably an interesting problem to solve - I'm sure with the right hardware installed on the users device, or the right authentication software in use, we could get this to happen, but both would require a cost far higher than the end point is worth.
+	</p>
+	<p>
+		We could even consider approaching the underlying design of the system differently. What if, instead of open, insecure APIs, the server provided encrypted APIs that required user authentication? This would eliminate a number of the harder to fix problems, and would make privacy a much smaller concern. That said, it would require re-designing the back-end to account for this, at some cost to the engineer. However, the cost here probably doesn't outweigh the importance of privacy. On an Internet plagued by privacy holes and security flaws, a little extra cost to the designer can make a huge difference to the user.
+	</p>
 </body>
 </html>

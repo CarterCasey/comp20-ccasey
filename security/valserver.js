@@ -28,7 +28,7 @@ app.post('/sendLocation', function(request, response) {
         var newlng = parseFloat(request.body.lng);
         var newcreated_at = Date.now();
         var entry = {
-            "login": newlogin,
+            "login": validator.escage(newlogin),
             "lat": newlat,
             "lng": newlng,
             "created_at": newcreated_at
